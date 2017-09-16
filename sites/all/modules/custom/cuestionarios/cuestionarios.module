@@ -1,0 +1,19 @@
+<?php
+/**
+* Implements hook_views_pre_render
+**/
+function cuestionarios_views_pre_render(&$view) {
+  global $user;
+  if ($view->name == 'view_actividades') {
+    foreach($view->result as $r => $result) {
+        $nid = $view->result[$r]->nid;
+        module_load_include('inc','webform','includes/webform.submissions');
+        $submissions = webform_get_submissions(array('nid'=> $nid, 'uid' => $user->uid));
+        dpm($view->result[$r]);
+        if (!empty($submissions)) {
+          $view->result[$r]->node_title = $view->result[$r]->node_title.' Entregada';
+        }
+        //dpm($submissions);
+    }
+  }
+}

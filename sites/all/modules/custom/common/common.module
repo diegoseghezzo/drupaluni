@@ -1,0 +1,7 @@
+<?php
+/*
+* Returns actividad status against the current user
+*/
+function _get_actividad_status() {
+
+}

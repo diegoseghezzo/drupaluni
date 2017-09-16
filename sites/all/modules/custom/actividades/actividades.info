@@ -1,0 +1,5 @@
+name = Actividades
+description = Gestion de actividades en el sitio.
+version = 7.x-1.0
+core = 7.x
+package = Universidad

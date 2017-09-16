@@ -1,0 +1,5 @@
+name = Universidad common functions
+description = Provides common functions used along other custom modules.
+version = 7.x-1.0
+core = 7.x
+package = universidad
