@@ -19,3 +19,12 @@ function common_update_7000() {
   $modules = array('entityreference', 'features', 'ct_asignatura');
   module_enable($modules);
 }
+/**
+ * Implements hook_update_N().
+ *
+ * Instalar entityreference, features y ct_asignatura.
+ */
+function common_update_7001() {
+  $modules = array('ct_video');
+  module_enable($modules);
+}

@@ -1,0 +1,14 @@
+name = CT Video
+core = 7.x
+package = Universidad
+dependencies[] = ct_asignatura
+dependencies[] = features
+dependencies[] = node
+dependencies[] = text
+dependencies[] = youtube
+features[features_api][] = api:2
+features[field_base][] = field_link_video_youtube
+features[field_instance][] = node-video-body
+features[field_instance][] = node-video-field_link_video_youtube
+features[node][] = video
+project path = sites/all/modules/custom/features
