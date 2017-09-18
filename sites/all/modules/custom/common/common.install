@@ -1,0 +1,21 @@
+<?php
+/**
+ * @file Install file for common module.
+ */
+
+/**
+ * Implements hook_install().
+ */
+function common_install() {
+  common_update_7000();
+}
+
+/**
+ * Implements hook_update_N().
+ *
+ * Instalar entityreference, features y ct_asignatura.
+ */
+function common_update_7000() {
+  $modules = array('entityreference', 'features', 'ct_asignatura');
+  module_enable($modules);
+}
