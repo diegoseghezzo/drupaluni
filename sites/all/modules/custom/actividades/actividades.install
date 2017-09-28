@@ -1,0 +1,46 @@
+<?php
+
+/**
+ * @file
+ *   Actividades module install/schema hooks.
+ */
+
+/**
+ * Implements hook_schema().
+ */
+function actividades_schema() {
+  $schema = array();
+
+  $schema['actividades_submissions_comments_data'] = array(
+    'description' => 'Stores all submitted field comments for webform submissions.',
+    'fields' => array(
+      'nid' => array(
+        'description' => 'The node identifier of a webform.',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'sid' => array(
+        'description' => 'The unique identifier for this submission.',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'data' => array(
+        'description' => 'The comments for this submission.',
+        'type' => 'blob',
+        'size' => 'big',
+        'not null' => TRUE,
+      ),
+    ),
+    'primary key' => array('nid', 'sid'),
+    'indexes' => array(
+      'nid' => array('nid'),
+      'sid_nid' => array('sid', 'nid'),
+    ),
+  );
+
+  return $schema;  
+}

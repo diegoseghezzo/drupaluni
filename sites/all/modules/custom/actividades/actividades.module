@@ -17,3 +17,138 @@ function actividades_views_pre_render(&$view) {
     }
   }
 }
+
+/**
+ * Implements hook_permission().
+ */
+function actividades_permission() {
+  return array(
+    'corregir actividades' => array(
+      'title' => t('Corregir actividades'),
+      'description' => t('Permite el acceso a corregir actividades.'),
+    ),
+  );
+}
+
+/**
+ * Implements hook_form_alter().
+ */
+function actividades_form_alter(&$form, &$form_state, $form_id) {
+  if (!empty($form['#node']) && ($form['#node']->type == 'actividad') && !empty($form['#submission'])) {
+    $children_keys = element_children($form['submitted']);
+
+    if (!empty($children_keys)) {
+      $nid = $form['#submission']->nid;
+      $sid = $form['#submission']->sid;
+      $data = actividades_get_submission_comments($nid, $sid);
+      $comments_read_only = !user_access('corregir actividades');
+      _actividades_submission_form_elements_add_comment_box($form['submitted'], $children_keys, $comments_read_only, $data);
+
+      $children_keys_after_adding_comments = element_children($form['submitted']);
+      $last_element_key = sizeof($children_keys_after_adding_comments) - 1;
+      $last_weight = $form['submitted'][$children_keys_after_adding_comments[$last_element_key]]['#weight'];
+
+      $form['submitted']['comentario_general'] = array(
+        '#type' => 'textarea',
+        '#title' => 'Comentario general',
+        '#weight' => $last_weight + 1,
+        '#disabled' => $comments_read_only,
+        '#default_value' => !empty($data['comentario_general']) ? $data['comentario_general'] : '',
+      );
+      $form['submitted']['puntuacion'] = array(
+        '#type' => 'textfield',
+        '#title' => 'puntuación',
+        '#weight' => $last_weight + 2,
+        '#disabled' => $comments_read_only,
+        '#default_value' => !empty($data['puntuacion']) ? $data['puntuacion'] : '',
+      );
+      $form['#submit'][] = '_actividades_comments_submit';
+    }
+  }
+}
+
+/**
+ * Add comment box below each webform component.
+ */
+function _actividades_submission_form_elements_add_comment_box(&$elements, $elements_keys, $comments_read_only = TRUE, $data) {
+  foreach ($elements_keys as $i => $key) {
+    if ($elements[$key]['#type'] != 'fieldset' && $elements[$key]['#type'] != 'pagebreak') {
+      $elements[$key]['#disabled'] = TRUE;
+
+      $cid = $elements[$key]['#webform_component']['cid'];
+
+      // Add the comment box.
+      $elements[$cid . '_comment'] = array(
+        '#type' => 'textarea',
+        '#title' => 'Corrección',
+        '#weight' => $elements[$key]['#weight'] + 1,
+        '#disabled' => $comments_read_only,
+        '#default_value' => !empty($data[$cid . '_comment']) ? $data[$cid . '_comment'] : '',
+      );
+
+      // Move all the elements below this one one step down to make room for the newly added comment box.
+      for ($j = $i+1; $j < sizeof($elements_keys); $j++) {
+        $elements[$elements_keys[$j]]['#weight']++;
+      }
+    }
+
+    $children_keys = element_children($elements[$key]);
+    if (!empty($children_keys)) {
+      _actividades_submission_form_elements_add_comment_box($elements[$key], $children_keys, $comments_read_only, $data);
+    }
+  }
+}
+
+/**
+ * Custom submit handler for submission edition.
+ */
+function _actividades_comments_submit($form, &$form_state) {
+  $nid = $form_state['values']['details']['nid'];
+  $sid = $form_state['values']['details']['sid'];
+  $data = array();
+  _actividades_get_submitted_comments($form_state['values']['submitted_tree'], $data);
+  actividades_save_submission_comments($nid, $sid, $data);
+}
+
+/**
+ * Get submission comments.
+ */
+function actividades_get_submission_comments($nid, $sid) {
+  $ret = array();
+  $sql = 'SELECT data FROM {actividades_submissions_comments_data} WHERE nid = :nid AND sid = :sid';
+  $data = db_query($sql, array(':nid' => $nid, ':sid' => $sid))->fetchField();
+  if (!empty($data)) {
+    $ret = unserialize($data);
+  }
+  return $ret;
+}
+
+/**
+ * Save submission comments.
+ */
+function actividades_save_submission_comments($nid, $sid, $comments_data) {
+  dpm($nid);
+  dpm($sid);
+  dpm($comments_data);
+  $serialized_data = serialize($comments_data);
+  db_merge('actividades_submissions_comments_data')
+    ->key(array('nid' => $nid, 'sid' => $sid))
+    ->fields(array(
+      'data' => $serialized_data,
+    ))
+    ->execute();
+}
+
+/**
+ * Retrieve comments from a form submission.
+ */
+function _actividades_get_submitted_comments($submitted, &$data) {
+  foreach ($submitted as $key => $value) {
+    if (is_array($value)) {
+      _actividades_get_submitted_comments($value, $data);
+    }
+    else if (strpos($key, 'comment') !== FALSE || strpos($key, 'comentario_general') !== FALSE || strpos($key, 'puntuacion') !== FALSE) {
+      $data[$key] = $value;
+    }
+  }
+}
