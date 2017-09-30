@@ -9,11 +9,9 @@ function actividades_views_pre_render(&$view) {
         $nid = $view->result[$r]->nid;
         module_load_include('inc','webform','includes/webform.submissions');
         $submissions = webform_get_submissions(array('nid'=> $nid, 'uid' => $user->uid));
-        dpm($view->result[$r]);
         if (!empty($submissions)) {
           $view->result[$r]->node_title = $view->result[$r]->node_title.' Entregada';
         }
-        //dpm($submissions);
     }
   }
 }
@@ -127,9 +125,6 @@ function actividades_get_submission_comments($nid, $sid) {
  * Save submission comments.
  */
 function actividades_save_submission_comments($nid, $sid, $comments_data) {
-  dpm($nid);
-  dpm($sid);
-  dpm($comments_data);
   $serialized_data = serialize($comments_data);
   db_merge('actividades_submissions_comments_data')
     ->key(array('nid' => $nid, 'sid' => $sid))
