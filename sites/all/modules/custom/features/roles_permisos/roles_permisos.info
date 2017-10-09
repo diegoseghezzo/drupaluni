@@ -1,0 +1,10 @@
+name = Roles Permisos
+core = 7.x
+package = Universidad
+dependencies[] = actividades
+dependencies[] = features
+features[features_api][] = api:2
+features[user_permission][] = corregir actividades
+features[user_role][] = alumno
+features[user_role][] = profesor
+project path = sites/all/modules/custom/features
