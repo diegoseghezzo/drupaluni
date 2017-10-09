@@ -1,0 +1,10 @@
+name = Perfil usuario
+core = 7.x
+package = Universidad
+dependencies[] = entityreference
+dependencies[] = features
+dependencies[] = options
+features[features_api][] = api:2
+features[field_base][] = field_asignatura
+features[field_instance][] = user-user-field_asignatura
+project path = sites/all/modules/custom/features
