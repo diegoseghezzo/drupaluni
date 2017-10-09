@@ -29,6 +29,18 @@ function actividades_permission() {
 }
 
 /**
+ * Implements hook_theme().
+ */
+function actividades_theme() {
+  $theme = array(
+    'actividades_alumno' => array(
+      'variables' => array('actividades' => NULL),
+      'template' => 'templates/actividad-alumno',
+    ),
+  );
+  return $theme;
+}
+/**
  * Implements hook_form_alter().
  */
 function actividades_form_alter(&$form, &$form_state, $form_id) {
@@ -146,4 +158,99 @@ function _actividades_get_submitted_comments($submitted, &$data) {
       $data[$key] = $value;
     }
   }
+}
+
+/**
+ * Implements hook_preprocess_user_profile().
+ */
+function actividades_preprocess_user_profile(&$vars) {
+
+  unset($vars['user_profile']['summary']);
+
+  if (!user_access('corregir actividades', $vars['user'])) {
+    // Es un alumno.
+    $actividades = get_actividades_user($vars['user']);
+    if (!empty($actividades)) {
+      $vars['user_profile']['actividades'] = array(
+        '#markup' => theme('actividades_alumno', array('actividades' => $actividades)),
+      );
+    }
+  }
+}
+
+/**
+ * Obtener información de las actividades de la asignatura de un usuario.
+ */
+function get_actividades_user($user) {
+  $emw = entity_metadata_wrapper('user', $user);
+  $asignatura = $emw->field_asignatura->raw();
+  $actividades = get_actividades($asignatura);
+  foreach ($actividades as &$actividad) {
+    $entrega = get_entrega_actividad($actividad['nid'], $user);
+    $estado = 'no entregada';
+    $link_actividad = l($actividad['title'], 'node/' . $actividad['nid']);
+    if (!empty($entrega['sid']) || !empty($entrega['puntuacion'])) {
+      $estado = 'entregada';
+      $link_actividad = l($actividad['title'], 'node/' . $actividad['nid'] . '/submission/' . $entrega['sid'] . '/edit');
+      if (!empty($entrega['puntuacion'])) {
+        // Significa que también tiene un sid, no puede haber puntuación sin sid
+        // porque se corrige una submission del webform.
+        $estado = 'corregida';
+      }
+    }
+    $actividad['estado'] = $estado;
+    $actividad['link_actividad'] = $link_actividad;
+    $actividad['sid'] = $entrega['sid'];
+    $actividad['puntuacion'] = $entrega['puntuacion'];
+  }
+}
+
+/**
+ * Obtener las actividades asociadas a una asignatura.
+ */
+function get_actividades($asignatura) {
+  $actividades = array();
+
+  $emw = entity_metadata_wrapper('node', $asignatura);
+  foreach ($emw->field_contenidos as $emw_contenidos) {
+    if ($emw_contenidos->type == 'actividad') {
+
+      $actividad['nid'] = $emw_contenidos->getIdentifier();
+      $actividad['title'] = $emw_contenidos->title->value();
+      $actividad['fecha_limite'] = $emw_contenidos->field_fecha_limite->value();
+
+      $actividades[] = $actividad;
+    }
+  }
+
+  return $actividades;
+}
+
+/**
+ * Obtener la información sobre la entrega de una actividad.
+ */
+function get_entrega_actividad($nid_actividad, $account = NULL) {
+  $estado = array(
+    'sid' => '',
+    'puntuacion' => '',
+  );
+
+  if (empty($account)) {
+    global $user;
+    $account = $user;
+  }
+  $sql = 'SELECT sid FROM {webform_submissions} WHERE nid = :nid AND uid = :uid';
+  $sid = db_query($sql, array(':nid' => $nid_actividad, ':uid' => $account->uid))->fetchField();
+
+  if (!empty($sid)) {
+    // El usuario entregó la actividad, ahora buscamos si el profesor
+    // la corrigió, y obtenemos la nota.
+    $estado['sid'] = $sid;
+    $data = actividades_get_submission_comments($nid_actividad, $sid);
+    if (!empty($data['puntuacion'])) {
+      $estado['puntuacion'] = $data['puntuacion'];
+    }
+  }
+
+  return $estado;
 }
