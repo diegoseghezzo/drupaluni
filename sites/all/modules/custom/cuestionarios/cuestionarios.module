@@ -17,3 +17,68 @@ function cuestionarios_views_pre_render(&$view) {
     }
   }
 }
+
+/**
+ * Obtener información de los cuestionarios de la asignatura de un usuario.
+ */
+function get_cuestionarios_user($user) {
+  $emw = entity_metadata_wrapper('user', $user);
+  $asignatura = $emw->field_asignatura->raw();
+  $cuestionarios = get_cuestionarios($asignatura);
+  foreach ($cuestionarios as &$cuestionario) {
+    $entrega = get_entrega_actividad($cuestionario['nid'], $user);
+    $estado = '';
+    $link_cuestionario = l($cuestionario['title'], 'node/' . $cuestionario['nid']);
+    if (!empty($entrega['sid'])) {
+      $estado = 'rellenado';
+      $link_cuestionario = l($cuestionario['title'], 'node/' . $cuestionario['nid'] . '/submission/' . $entrega['sid']);
+    }
+    $cuestionario['estado'] = $estado;
+    $cuestionario['link_cuestionario'] = $link_cuestionario;
+    $cuestionario['sid'] = $entrega['sid'];
+  }
+}
+
+/**
+ * Obtener los cuestionarios asociados a una asignatura.
+ */
+function get_cuestionarios($asignatura) {
+  $cuestionarios = array();
+
+  $emw = entity_metadata_wrapper('node', $asignatura);
+  foreach ($emw->field_contenidos as $emw_contenidos) {
+    if ($emw_contenidos->type == 'cuestionario') {
+
+      $cuestionario['nid'] = $emw_contenidos->getIdentifier();
+      $cuestionario['title'] = $emw_contenidos->title->value();
+
+      $cuestionarios[] = $cuestionario;
+    }
+  }
+
+  return $cuestionarios;
+}
+
+/**
+ * Obtener la información sobre la entrega de un cuestionario.
+ */
+function get_entrega_cuestionario($nid_cuestionario, $account = NULL) {
+  $estado = array(
+    'sid' => '',
+  );
+
+  if (empty($account)) {
+    global $user;
+    $account = $user;
+  }
+  $sql = 'SELECT sid FROM {webform_submissions} WHERE nid = :nid AND uid = :uid';
+  $sid = db_query($sql, array(':nid' => $nid_cuestionario, ':uid' => $account->uid))->fetchField();
+
+  if (!empty($sid)) {
+    // El usuario entregó la actividad, ahora buscamos si el profesor
+    // la corrigió, y obtenemos la nota.
+    $estado['sid'] = $sid;
+  }
+
+  return $estado;
+}

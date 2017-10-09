@@ -35,7 +35,11 @@ function actividades_theme() {
   $theme = array(
     'actividades_alumno' => array(
       'variables' => array('actividades' => NULL),
-      'template' => 'templates/actividad-alumno',
+      'template' => 'templates/actividades-alumno',
+    ),
+    'cuestionarios_alumno' => array(
+      'variables' => array('cuestionarios' => NULL),
+      'template' => 'templates/cuestionarios-alumno',
     ),
   );
   return $theme;
@@ -173,6 +177,13 @@ function actividades_preprocess_user_profile(&$vars) {
     if (!empty($actividades)) {
       $vars['user_profile']['actividades'] = array(
         '#markup' => theme('actividades_alumno', array('actividades' => $actividades)),
+      );
+    }
+
+    $cuestionarios = get_cuestionarios_user($vars['user']);
+    if (!empty($cuestionarios)) {
+      $vars['user_profile']['cuestionarios'] = array(
+        '#markup' => theme('cuestionarios_alumno', array('cuestionarios' => $cuestionarios)),
       );
     }
   }
