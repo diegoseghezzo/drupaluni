@@ -28,3 +28,12 @@ function common_update_7001() {
   $modules = array('ct_video');
   module_enable($modules);
 }
+/**
+ * Implements hook_update_N().
+ *
+ * Instalar perfil_usuario, roles_permisos.
+ */
+function common_update_7002() {
+  $modules = array('perfil_usuario', 'roles_permisos');
+  module_enable($modules);
+}
