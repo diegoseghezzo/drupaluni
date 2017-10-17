@@ -165,6 +165,20 @@ function _actividades_get_submitted_comments($submitted, &$data) {
 }
 
 /**
+ * Implements hook_node_view().
+ *
+ * Prevent access to the actividad webform if field_fecha_limite is in the past.
+ */
+function actividades_node_view($node, $view_mode) {
+  if ($node->type == 'actividad') {
+    $emw = entity_metadata_wrapper('node', $node);
+    if (time() > $emw->field_fecha_limite->value()) {
+      $node->content['webform']['#enabled'] = FALSE;
+    }
+  }
+}
+
+/**
  * Implements hook_preprocess_user_profile().
  */
 function actividades_preprocess_user_profile(&$vars) {
