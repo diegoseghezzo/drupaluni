@@ -228,6 +228,7 @@ function get_actividades_user($user) {
     $actividad['sid'] = $entrega['sid'];
     $actividad['puntuacion'] = $entrega['puntuacion'];
   }
+  return $actividades;
 }
 
 /**
@@ -235,14 +236,12 @@ function get_actividades_user($user) {
  */
 function get_actividades($asignatura) {
   $actividades = array();
-
   $emw = entity_metadata_wrapper('node', $asignatura);
   foreach ($emw->field_contenidos as $emw_contenidos) {
-    if ($emw_contenidos->type == 'actividad') {
-
+    if ($emw_contenidos->type->value() == 'actividad') {
       $actividad['nid'] = $emw_contenidos->getIdentifier();
       $actividad['title'] = $emw_contenidos->title->value();
-      $actividad['fecha_limite'] = $emw_contenidos->field_fecha_limite->value();
+      $actividad['fecha_limite'] = format_date($emw_contenidos->field_fecha_limite->value());
 
       $actividades[] = $actividad;
     }

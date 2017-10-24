@@ -37,6 +37,7 @@ function get_cuestionarios_user($user) {
     $cuestionario['link_cuestionario'] = $link_cuestionario;
     $cuestionario['sid'] = $entrega['sid'];
   }
+  return $cuestionarios;
 }
 
 /**
@@ -47,7 +48,7 @@ function get_cuestionarios($asignatura) {
 
   $emw = entity_metadata_wrapper('node', $asignatura);
   foreach ($emw->field_contenidos as $emw_contenidos) {
-    if ($emw_contenidos->type == 'cuestionario') {
+    if ($emw_contenidos->type->value() == 'cuestionario') {
 
       $cuestionario['nid'] = $emw_contenidos->getIdentifier();
       $cuestionario['title'] = $emw_contenidos->title->value();
