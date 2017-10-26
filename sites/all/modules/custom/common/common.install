@@ -37,3 +37,15 @@ function common_update_7002() {
   $modules = array('perfil_usuario', 'roles_permisos');
   module_enable($modules);
 }
+/**
+ * Implements hook_update_N().
+ *
+ * Instalar logintoboggan, universidad_granada_rules.
+ */
+function common_update_7003() {
+  $modules = array('logintoboggan', 'universidad_granada_rules');
+  module_enable($modules);
+
+  // Allow users to login using username or email.
+  variable_set('logintoboggan_login_with_email', '1');
+}
