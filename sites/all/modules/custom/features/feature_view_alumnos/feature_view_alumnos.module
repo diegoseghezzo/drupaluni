@@ -1,0 +1,7 @@
+<?php
+/**
+ * @file
+ * Code for the Feature View alumnos feature.
+ */
+
+include_once 'feature_view_alumnos.features.inc';
